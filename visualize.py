@@ -24,7 +24,6 @@ def display_instances(image,
                       class_ids, 
                       coco,
                       scores,
-                      threshold=0.5, 
                       show_mask=True, 
                       show_bbox=True,
                       ):
@@ -62,42 +61,42 @@ def display_instances(image,
 
     masked_image = image.astype(np.uint32).copy()
     for i in range(N):
-        if scores[i] > threshold:
-            color = colors[i]
+        
+        color = colors[i]
 
-            # Bounding box
-            x1, y1, x2, y2 = boxes[i]
-            if show_bbox:
-                p = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, linewidth=2,
-                                    alpha=0.7, linestyle="dashed",
-                                    edgecolor=color, facecolor='none')
-                ax.add_patch(p)
+        # Bounding box
+        x1, y1, x2, y2 = boxes[i]
+        if show_bbox:
+            p = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, linewidth=2,
+                                alpha=0.7, linestyle="dashed",
+                                edgecolor=color, facecolor='none')
+            ax.add_patch(p)
 
-            # Label
-            class_id = class_ids[i].item()
-            score = scores[i] if scores is not None else None
-            label = coco.loadCats(class_id)[0]['name']
-            caption = "{} {:.3f}".format(label, score) if score else label
-            ax.text(x1, y1 + 8, caption,
-                color='w', size=11, backgroundcolor="none")
-            
+        # Label
+        class_id = class_ids[i].item()
+        score = scores[i] if scores is not None else None
+        label = coco.loadCats(class_id)[0]['name']
+        caption = "{} {:.3f}".format(label, score) if score else label
+        ax.text(x1, y1 + 8, caption,
+            color='w', size=11, backgroundcolor="none")
+        
 
-            # Mask
-            mask = masks[i]
-            if show_mask:
-                masked_image = apply_mask(masked_image, mask, color)
+        # Mask
+        mask = masks[i]
+        if show_mask:
+            masked_image = apply_mask(masked_image, mask, color)
 
-            # Mask Polygon
-            # Pad to ensure proper polygons for masks that touch image edges.
-            padded_mask = np.zeros(
-                (mask.shape[1] + 2, mask.shape[2] + 2), dtype=np.uint8)
-            padded_mask[1:-1, 1:-1] = mask.numpy()
-            contours = find_contours(padded_mask, 0.5)
-            for verts in contours:
-                # Subtract the padding and flip (y, x) to (x, y)
-                verts = np.fliplr(verts) - 1
-                p = patches.Polygon(verts, facecolor="none", edgecolor=color)
-                ax.add_patch(p)
+        # Mask Polygon
+        # Pad to ensure proper polygons for masks that touch image edges.
+        padded_mask = np.zeros(
+            (mask.shape[1] + 2, mask.shape[2] + 2), dtype=np.uint8)
+        padded_mask[1:-1, 1:-1] = mask.numpy()
+        contours = find_contours(padded_mask, 0.5)
+        for verts in contours:
+            # Subtract the padding and flip (y, x) to (x, y)
+            verts = np.fliplr(verts) - 1
+            p = patches.Polygon(verts, facecolor="none", edgecolor=color)
+            ax.add_patch(p)
         ax.imshow(masked_image.astype(np.uint8))
     plt.show()
 
